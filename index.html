@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-o3dK1L0r/n6vxx4rcHV+wDISLoqvsq2Mt2eFiAJreMQ='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lrKrW6bPt2ZLE2UNEjI6zdDz7I9KwhOI4NqZZW4kC7Q='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Concept Mapper</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,6 +46,14 @@
     border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);z-index:2;
   }
   .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .brand-link{
+    display:flex;align-items:center;gap:11px;min-width:0;
+    text-decoration:none;color:inherit;border-radius:var(--radius-sm);
+    padding:2px 4px;margin:-2px -4px;transition:background .15s ease;
+  }
+  .brand-link:hover{background:var(--ink-50)}
+  .brand-link:hover h1{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px;text-decoration-color:var(--accent)}
+  .brand-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .brand .glyph{width:30px;height:30px;flex:0 0 auto}
   .brand h1{
     font-family:var(--font-display);font-weight:700;font-size:1.18rem;
@@ -175,6 +183,8 @@
   .modal ul{margin:0;padding-left:18px}
   .modal li{font-size:13.5px;line-height:1.7;color:var(--text-soft)}
   .modal li b{color:var(--text)}
+  .modal a{color:var(--accent);font-weight:600;text-decoration:none}
+  .modal a:hover{text-decoration:underline;text-underline-offset:2px}
 
   .toast{
     position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
@@ -204,6 +214,7 @@
 <div class="app">
   <header>
     <div class="brand">
+      <a class="brand-link" href="https://trbaker.github.io/concept_mapping/" target="_blank" rel="noopener noreferrer" title="Open the Concept Mapper project page (new tab)">
       <svg class="glyph" viewBox="0 0 32 32" fill="none">
         <rect x="2.5" y="11" width="13" height="9" rx="3" fill="#E2DCD2" stroke="#6B6459" stroke-width="1.6"/>
         <ellipse cx="24" cy="7" rx="6" ry="4.4" fill="#E9D4BF" stroke="#C2763C" stroke-width="1.6"/>
@@ -214,6 +225,7 @@
       <div>
         <h1>Concept Mapper</h1>
       </div>
+      </a>
     </div>
     <div class="title-wrap">
       <input id="mapTitle" type="text" placeholder="Untitled map" />
@@ -306,6 +318,10 @@
         <li><b>Double-click</b> any item to edit its words. Press <b>Delete</b> to remove the selection.</li>
         <li><b>Export JPG</b> saves a picture of your finished map. <b>Save</b> stores an editable file you can re-open later.</li>
       </ul>
+
+      <h3>Get your own Concept Mapper</h3>
+      <p>This app was created by Tom Baker of the Esri Education Team (<a href="mailto:tbaker@esri.com">tbaker@esri.com</a>). Anyone can add the Concept Mapper to their ArcGIS StoryMap or other educational web publications.</p>
+      <p>To use the app, in ArcGIS StoryMaps add an <b>Embed</b> block and paste the following URL: <a href="https://trbaker.github.io/concept_mapping/" target="_blank" rel="noopener noreferrer">https://trbaker.github.io/concept_mapping/</a></p>
     </div>
   </div>
 </div>
@@ -1142,6 +1158,7 @@ document.getElementById('rail').addEventListener('click', e=>{
 // keyboard
 window.addEventListener('keydown', e=>{
   if(editingId!=null) return;
+  if(deliveryOpen) return;
   const tag = (e.target.tagName||'').toLowerCase();
   if(tag==='input' || tag==='textarea') return;
   if((e.key==='Delete' || e.key==='Backspace') && selectedId){ e.preventDefault(); deleteSelected(); return; }
@@ -1170,14 +1187,108 @@ function toast(msg){
   clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+// ---------- File delivery (download, with in-iframe fallbacks) ----------
+// Programmatic downloads are blocked inside cross-origin / sandboxed iframes
+// (e.g. an ArcGIS StoryMaps "Embed" block). When framed, present the result
+// inline so it can be saved without needing any download permission.
+const inIframe = (()=>{ try{ return window.self !== window.top; }catch(_){ return true; } })();
+let deliveryOpen = 0;
+
+function triggerDownload(filename, url, revoke){
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  if(revoke) setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+function fallbackCopy(area, ok){
+  area.focus(); area.select();
+  try{ if(document.execCommand('copy')){ ok(); return; } }catch(_){}
+  toast('Press Ctrl/Cmd + C to copy');
+}
+function openInNewTab(url, isBlob){
+  try{
+    const w = window.open(url, '_blank');
+    if(!w){ toast('Pop-up blocked \u2014 use the save option above'); return; }
+    if(isBlob) setTimeout(()=>URL.revokeObjectURL(url), 15000);
+  }catch(_){ toast('Could not open a new tab'); }
+}
+function openDeliveryModal(titleText){
+  const scrim = document.createElement('div'); scrim.className = 'scrim show';
+  const modal = document.createElement('div'); modal.className = 'modal'; modal.style.maxWidth = '600px';
+  const top = document.createElement('div'); top.className = 'top';
+  const h = document.createElement('h2'); h.textContent = titleText; h.style.fontSize = '1.3rem';
+  const x = document.createElement('button'); x.className = 'x'; x.textContent = '\u00d7'; x.setAttribute('aria-label','Close');
+  top.append(h, x);
+  const content = document.createElement('div'); content.className = 'content';
+  modal.append(top, content); scrim.appendChild(modal); document.body.appendChild(scrim);
+  deliveryOpen++;
+  function esc(e){ if(e.key === 'Escape') close(); }
+  function close(){
+    if(!scrim.parentNode) return;
+    scrim.remove(); deliveryOpen = Math.max(0, deliveryOpen-1);
+    document.removeEventListener('keydown', esc);
+  }
+  x.onclick = close;
+  scrim.addEventListener('click', e=>{ if(e.target === scrim) close(); });
+  document.addEventListener('keydown', esc);
+  return {content, close};
+}
+function actionRow(){ const r = document.createElement('div'); r.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap'; return r; }
+function mkBtn(cls, label, fn){ const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.onclick = fn; return b; }
+
+function showImageDelivery(filename, dataUrl, blob){
+  const {content, close} = openDeliveryModal('Your map image');
+  const p = document.createElement('p');
+  p.append('To keep this image, ');
+  const b1 = document.createElement('b'); b1.textContent = 'right-click it and choose \u201cSave image as\u2026\u201d';
+  p.append(b1, ' On a phone or tablet, ');
+  const b2 = document.createElement('b'); b2.textContent = 'press and hold';
+  p.append(b2, ' the image, then tap Save.');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:48vh;background:var(--ink-50);padding:8px;margin-bottom:16px';
+  const img = document.createElement('img');
+  img.src = dataUrl; img.alt = filename;
+  img.style.cssText = 'display:block;max-width:100%;height:auto;margin:0 auto;border-radius:4px';
+  wrap.appendChild(img);
+  const row = actionRow();
+  row.append(
+    mkBtn('primary','Open in new tab', ()=>{ blob ? openInNewTab(URL.createObjectURL(blob), true) : openInNewTab(dataUrl, false); }),
+    mkBtn('ghost','Try direct download', ()=>{ blob ? triggerDownload(filename, URL.createObjectURL(blob), true) : triggerDownload(filename, dataUrl, false); }),
+    mkBtn('ghost','Done', close)
+  );
+  content.append(p, wrap, row);
+}
+function showTextDelivery(filename, text){
+  const {content, close} = openDeliveryModal('Save your map file');
+  const p = document.createElement('p');
+  p.append('Copy the text below into a plain-text file ending in ');
+  const b = document.createElement('b'); b.textContent = '.json'; p.append(b, ', or use the buttons. Re-open it later with the Open button.');
+  const ta = document.createElement('textarea');
+  ta.readOnly = true; ta.value = text;
+  ta.style.cssText = 'width:100%;height:34vh;resize:vertical;font:12px/1.5 var(--font-mono);padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--ink-50);color:var(--text);margin-bottom:16px';
+  const copy = ()=>{
+    const ok = ()=>toast('Copied \u2014 paste into a .json file');
+    if(navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(text).then(ok).catch(()=>fallbackCopy(ta, ok));
+    else fallbackCopy(ta, ok);
+  };
+  const row = actionRow();
+  row.append(
+    mkBtn('primary','Copy text', copy),
+    mkBtn('ghost','Open in new tab', ()=>openInNewTab(URL.createObjectURL(new Blob([text],{type:'application/json'})), true)),
+    mkBtn('ghost','Try direct download', ()=>triggerDownload(filename, URL.createObjectURL(new Blob([text],{type:'application/json'})), true)),
+    mkBtn('ghost','Done', close)
+  );
+  content.append(p, ta, row);
+  setTimeout(()=>{ ta.focus(); ta.select(); }, 30);
+}
+
 // ---------- Save / Open JSON ----------
 document.getElementById('saveBtn').onclick = ()=>{
-  const data = {version:1, title:document.getElementById('mapTitle').value, shapes, idSeq};
-  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (cleanName()||'concept-map') + '.json';
-  a.click(); URL.revokeObjectURL(a.href);
+  const json = JSON.stringify({version:1, title:document.getElementById('mapTitle').value, shapes, idSeq}, null, 2);
+  const filename = (cleanName()||'concept-map') + '.json';
+  if(inIframe){ showTextDelivery(filename, json); return; }
+  triggerDownload(filename, URL.createObjectURL(new Blob([json],{type:'application/json'})), true);
   toast('Saved editable map file');
 };
 const fileIn = document.getElementById('fileIn');
@@ -1242,10 +1353,14 @@ function exportJPG(){
   drawScene(oc, {export:true});
   selectedId = keepSel;
   redraw();
-  const url = off.toDataURL('image/jpeg', 0.95);
-  const a = document.createElement('a');
-  a.href = url; a.download = (cleanName()||'concept-map') + '.jpg';
-  a.click();
+  const filename = (cleanName()||'concept-map') + '.jpg';
+  const dataUrl = off.toDataURL('image/jpeg', 0.95);
+  if(inIframe){
+    if(off.toBlob) off.toBlob(blob=>showImageDelivery(filename, dataUrl, blob), 'image/jpeg', 0.95);
+    else showImageDelivery(filename, dataUrl, null);
+    return;
+  }
+  triggerDownload(filename, dataUrl, false);
   toast('Exported JPG image');
 }
 function cleanName(){
