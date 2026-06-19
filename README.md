@@ -1,4 +1,5 @@
-
+## Concept Mapper
+https://trbaker.github.io/concept_mapping/ 
 
 Concept Mapper is a browser-based studio for building concept maps — the diagram style where ideas are drawn as boxes or ovals and joined by labeled arrows, so that each "concept → linking word → concept" reads as a short sentence, or proposition. It runs entirely as a single self-contained HTML file with no install, login, or server: everything happens locally in the browser. The workspace is a dotted-paper canvas with five tools — select, box, oval, link, and text — plus connectors that attach to nodes and re-route themselves automatically when you move things around. You can rename anything by double-clicking, recolor and resize from the side panel, undo and redo your steps, and finish by exporting the finished map as a JPG image or saving an editable file you can reopen later.
 
