@@ -2,9 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lrKrW6bPt2ZLE2UNEjI6zdDz7I9KwhOI4NqZZW4kC7Q='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lrKrW6bPt2ZLE2UNEjI6zdDz7I9KwhOI4NqZZW4kC7Q=' 'sha256-1/eY0FtxJexzUSdqnq6FBQPovkPFoF6+zO/lf8FVb2c=' https://www.googletagmanager.com; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://www.google-analytics.com https://*.google-analytics.com; connect-src https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; base-uri 'none'; form-action 'none'" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Concept Mapper</title>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HZWNB3WHS6"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HZWNB3WHS6');
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -185,6 +193,7 @@
   .modal li b{color:var(--text)}
   .modal a{color:var(--accent);font-weight:600;text-decoration:none}
   .modal a:hover{text-decoration:underline;text-underline-offset:2px}
+  .modal-credit{margin-top:var(--space-6);padding-top:var(--space-4);border-top:1px solid var(--border-soft);font-size:13px;color:var(--text-mute)}
 
   .toast{
     position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
@@ -322,6 +331,8 @@
       <h3>Get your own Concept Mapper</h3>
       <p>This app was created by Tom Baker of the Esri Education Team (<a href="mailto:tbaker@esri.com">tbaker@esri.com</a>). Anyone can add the Concept Mapper to their ArcGIS StoryMap or other educational web publications.</p>
       <p>To use the app, in ArcGIS StoryMaps add an <b>Embed</b> block and paste the following URL: <a href="https://trbaker.github.io/concept_mapping/" target="_blank" rel="noopener noreferrer">https://trbaker.github.io/concept_mapping/</a></p>
+
+      <p class="modal-credit">Designed by <a href="https://tbaker.com" target="_blank" rel="noopener noreferrer">Tom Baker</a>.</p>
     </div>
   </div>
 </div>
